@@ -11,7 +11,7 @@ import mongoose from "mongoose";
 async function getUser(id: string): Promise<User | null> {
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Invalid id");
+      throw new Error("Invalid user id");
     }
     const user = await UserModel.findById(id);
     return user;
@@ -46,7 +46,7 @@ async function updateUser(
 ): Promise<User | null> {
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Invalid id");
+      throw new Error("Invalid user id");
     }
     const validatedData = userUpdateSchema.parse(userData);
     const user = await UserModel.findByIdAndUpdate(id, validatedData, { new: true });
@@ -64,7 +64,7 @@ async function updateUser(
 async function deleteUser(id: string): Promise<boolean> {
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Invalid id");
+      throw new Error("Invalid user id");
     }
     const result = await UserModel.findByIdAndDelete(id);
     return result !== null;
