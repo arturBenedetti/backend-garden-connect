@@ -6,7 +6,6 @@ async function getUser(req: Request, res: Response, next: NextFunction) {
   try {
     const id = String(req.params.id);
     const user = await userRepository.getUser(id);
-
     if (user) res.status(200).json(user);
     else res.status(404).json({ error: "User not found" });
   } catch (error) {
