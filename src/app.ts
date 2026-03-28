@@ -1,16 +1,14 @@
 import type { Request, Response, NextFunction } from "express";
 import "express-async-errors";
 import express from "express";
-import userRouter from "./routers/user.router";
-import gardenRouter from "./routers/garden.router";
+import rootRouter from "./routers/router";
 import { getZodErrorMessage } from "./middlewares/error.handler";
 
 const app = express();
 
 app.use(express.json());
 
-app.use("/users", userRouter);
-app.use("/gardens", gardenRouter);
+app.use(rootRouter);
 
 app.use("/health", (req: Request, res: Response, next: NextFunction) => {
   res.send("Hello World");
