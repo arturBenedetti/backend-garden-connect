@@ -49,9 +49,7 @@ async function updateUser(
       throw new Error("Invalid id");
     }
     const validatedData = userUpdateSchema.parse(userData);
-    const user = await UserModel.findByIdAndUpdate(id, validatedData, {
-      new: true,
-    });
+    const user = await UserModel.findByIdAndUpdate(id, validatedData, { new: true });
 
     if (!user) {
       throw new Error("User not found");
