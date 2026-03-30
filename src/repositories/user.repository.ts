@@ -1,54 +1,40 @@
 import UserModel from "../models/user.model";
-import { User } from "../entities/user.entity";
+import { UserDocument } from "../entities/user.entity";
 import {
-  userSchema,
-  userUpdateSchema,
+  UserDTO,
   UserInput,
   UserUpdateInput,
 } from "../dtos/user.dto";
 import mongoose from "mongoose";
 
-async function getUser(id: string): Promise<User | null> {
-  try {
+class UserRepository {
+  async getUser(id: string): Promise<UserDocument | null> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new Error("Invalid user id");
     }
-    const user = await UserModel.findById(id);
-    return user;
-  } catch (error) {
-    throw error;
+    return UserModel.findById(id);
   }
-}
 
-async function getUsers(): Promise<User[]> {
-  try {
-    const users = await UserModel.find();
-    return users;
-  } catch (error) {
-    throw error;
+  async getUsers(): Promise<UserDocument[]> {
+    return UserModel.find();
   }
-}
 
-async function addUser(userInput: UserInput): Promise<User> {
-  try {
-    const validatedData = userSchema.parse(userInput);
+  async addUser(userInput: UserInput): Promise<UserDocument> {
+    const validatedData = UserDTO.validate(userInput);
     const newUser = new UserModel(validatedData);
     await newUser.save();
     return newUser;
-  } catch (error) {
-    throw error;
   }
-}
 
-async function updateUser(
-  id: string,
-  userData: UserUpdateInput
-): Promise<User | null> {
-  try {
+  async updateUser(
+    id: string,
+    userData: UserUpdateInput
+  ): Promise<UserDocument | null> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new Error("Invalid user id");
     }
-    const validatedData = userUpdateSchema.parse(userData);
+
+    const validatedData = UserDTO.validateUpdate(userData);
     const user = await UserModel.findByIdAndUpdate(id, validatedData, { new: true });
 
     if (!user) {
@@ -56,27 +42,15 @@ async function updateUser(
     }
 
     return user;
-  } catch (error) {
-    throw error;
   }
-}
 
-async function deleteUser(id: string): Promise<boolean> {
-  try {
+  async deleteUser(id: string): Promise<boolean> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new Error("Invalid user id");
     }
     const result = await UserModel.findByIdAndDelete(id);
     return result !== null;
-  } catch (error) {
-    throw error;
   }
 }
 
-export default {
-  getUser,
-  getUsers,
-  addUser,
-  updateUser,
-  deleteUser,
-};
+export default new UserRepository();

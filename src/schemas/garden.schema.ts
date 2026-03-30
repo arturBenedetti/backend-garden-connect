@@ -1,7 +1,7 @@
 import { Schema } from "mongoose";
-import { Garden } from "../entities/garden.entity";
+import { GardenDocument } from "../entities/garden.entity";
 
-const gardenSchema = new Schema<Garden>(
+const gardenSchema = new Schema<GardenDocument>(
   {
     name: {
       type: String,

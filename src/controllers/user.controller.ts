@@ -2,62 +2,58 @@ import { Request, Response, NextFunction } from "express";
 import userRepository from "../repositories/user.repository";
 import { UserInput } from "../dtos/user.dto";
 
-async function getUser(req: Request, res: Response, next: NextFunction) {
-  try {
-    const id = String(req.params.id);
-    const user = await userRepository.getUser(id);
-    if (user) res.status(200).json(user);
-    else res.status(404).json({ error: "User not found" });
-  } catch (error) {
-    next(error);
+class UserController {
+  async getUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = String(req.params.id);
+      const user = await userRepository.getUser(id);
+      if (user) res.status(200).json(user);
+      else res.status(404).json({ error: "User not found" });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const users = await userRepository.getUsers();
+      res.status(200).json(users);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async postUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userData = req.body as UserInput;
+      const result = await userRepository.addUser(userData);
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async patchUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = String(req.params.id);
+      const userData = req.body;
+      const result = await userRepository.updateUser(id, userData);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = String(req.params.id);
+      const result = await userRepository.deleteUser(id);
+      if (result) res.sendStatus(204);
+      else res.status(404).json({ error: "User not found" });
+    } catch (error) {
+      next(error);
+    }
   }
 }
 
-async function getUsers(req: Request, res: Response, next: NextFunction) {
-  try {
-    const users = await userRepository.getUsers();
-    res.status(200).json(users);
-  } catch (error) {
-    next(error);
-  }
-}
-
-async function postUser(req: Request, res: Response, next: NextFunction) {
-  try {
-    const userData = req.body as UserInput;
-    const result = await userRepository.addUser(userData);
-    res.status(201).json(result);
-  } catch (error) {
-    next(error);
-  }
-}
-
-async function patchUser(req: Request, res: Response, next: NextFunction) {
-  try {
-    const id = String(req.params.id);
-    const userData = req.body;
-    const result = await userRepository.updateUser(id, userData);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-}
-
-async function deleteUser(req: Request, res: Response, next: NextFunction) {
-  try {
-    const id = String(req.params.id);
-    const result = await userRepository.deleteUser(id);
-    if (result) res.sendStatus(204);
-    else res.status(404).json({ error: "User not found" });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export default {
-  getUser,
-  getUsers,
-  postUser,
-  patchUser,
-  deleteUser,
-};
+export default new UserController();

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import userSchema from "../schemas/user.schema";
-import { User } from "../entities/user.entity";
+import { UserDocument } from "../entities/user.entity";
 
-const UserModel = mongoose.model<User>("User", userSchema);
+const UserModel = mongoose.model<UserDocument>("User", userSchema);
 
 export default UserModel;
