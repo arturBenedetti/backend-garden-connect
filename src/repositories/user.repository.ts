@@ -6,11 +6,12 @@ import {
   UserUpdateInput,
 } from "../dtos/user.dto";
 import mongoose from "mongoose";
+import { BadRequestError, NotFoundError } from "../errors/http-error";
 
 class UserRepository {
   async getUser(id: string): Promise<UserDocument | null> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Invalid user id");
+      throw new BadRequestError("Invalid user id");
     }
     return UserModel.findById(id);
   }
@@ -31,14 +32,14 @@ class UserRepository {
     userData: UserUpdateInput
   ): Promise<UserDocument | null> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Invalid user id");
+      throw new BadRequestError("Invalid user id");
     }
 
     const validatedData = UserDTO.validateUpdate(userData);
     const user = await UserModel.findByIdAndUpdate(id, validatedData, { new: true });
 
     if (!user) {
-      throw new Error("User not found");
+      throw new NotFoundError("User not found");
     }
 
     return user;
@@ -46,10 +47,13 @@ class UserRepository {
 
   async deleteUser(id: string): Promise<boolean> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Invalid user id");
+      throw new BadRequestError("Invalid user id");
     }
     const result = await UserModel.findByIdAndDelete(id);
-    return result !== null;
+    if (!result) {
+      throw new NotFoundError("User not found");
+    }
+    return true;
   }
 }
 

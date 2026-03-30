@@ -7,8 +7,7 @@ class GardenController {
     try {
       const id = String(req.params.id);
       const garden = await gardenRepository.getGarden(id);
-      if (garden) res.status(200).json(garden);
-      else res.status(404).json({ error: "Garden not found" });
+      res.status(200).json(garden);
     } catch (error) {
       next(error);
     }
@@ -47,9 +46,8 @@ class GardenController {
   async deleteGarden(req: Request, res: Response, next: NextFunction) {
     try {
       const id = String(req.params.id);
-      const result = await gardenRepository.deleteGarden(id);
-      if (result) res.sendStatus(204);
-      else res.status(404).json({ error: "Garden not found" });
+      await gardenRepository.deleteGarden(id);
+      res.sendStatus(204);
     } catch (error) {
       next(error);
     }

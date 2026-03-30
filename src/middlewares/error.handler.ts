@@ -1,4 +1,5 @@
 import { ZodError } from "zod";
+import { HttpError } from "../errors/http-error";
 
 export function getZodErrorMessage(error: any): string {
   if (error?.name === "ZodError" || error instanceof ZodError) {
@@ -18,5 +19,22 @@ export function getZodErrorMessage(error: any): string {
     return issues?.[0]?.message || "Validation failed";
   }
 
+  if (error instanceof HttpError) {
+    return error.message;
+  }
+
   return error?.message || "Internal error";
 }
+
+export function getErrorStatusCode(error: any): number {
+  if (error instanceof HttpError) {
+    return error.statusCode;
+  }
+
+  if (error?.name === "ZodError" || error instanceof ZodError) {
+    return 400;
+  }
+
+  return 500;
+}
+
