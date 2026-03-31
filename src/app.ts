@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import "express-async-errors";
 import express from "express";
 import rootRouter from "./routers/router";
-import { getZodErrorMessage } from "./middlewares/error.handler";
+import { getZodErrorMessage, getErrorStatusCode } from "./middlewares/error.handler";
 
 const app = express();
 
@@ -16,14 +16,9 @@ app.use("/health", (req: Request, res: Response, next: NextFunction) => {
 
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   const message = getZodErrorMessage(error);
-  const status =
-    error?.name === "ZodError" || error instanceof Error ? 400 : 500;
+  const status = getErrorStatusCode(error);
 
-  if (error?.name === "ZodError") {
-    return res.status(status).json({ message });
-  }
-
-  res.status(500).json({ message });
+  res.status(status).json({ message });
 });
 
 export default app;

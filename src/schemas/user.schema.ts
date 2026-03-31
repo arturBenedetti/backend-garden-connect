@@ -1,7 +1,7 @@
 import { Schema } from "mongoose";
-import { User } from "../entities/user.entity";
+import { UserDocument } from "../entities/user.entity";
 
-const userSchema = new Schema<User>(
+const userSchema = new Schema<UserDocument>(
   {
     name: {
       type: String,
