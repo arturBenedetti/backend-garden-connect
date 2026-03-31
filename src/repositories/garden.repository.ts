@@ -1,82 +1,60 @@
 import GardenModel from "../models/garden.model";
-import { Garden } from "../entities/garden.entity";
+import { GardenDocument } from "../entities/garden.entity";
 import {
-  gardenSchema,
-  GardenUpdateSchema,
+  GardenDTO,
   GardenInput,
   GardenUpdateInput,
 } from "../dtos/garden.dto";
 import mongoose from "mongoose";
+import { BadRequestError, NotFoundError } from "../errors/http-error";
 
-async function getGarden(id: string): Promise<Garden | null> {
-  try {
+class GardenRepository {
+  async getGarden(id: string): Promise<GardenDocument | null> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Invalid garden id");
+      throw new BadRequestError("Invalid garden id");
     }
-    const garden = await GardenModel.findById(id);
-    return garden;
-  } catch (error) {
-    throw error;
+    return GardenModel.findById(id);
   }
-}
 
-async function getGardens(): Promise<Garden[]> {
-  try {
-    const gardens = await GardenModel.find();
-    return gardens;
-  } catch (error) {
-    throw error;
+  async getGardens(): Promise<GardenDocument[]> {
+    return GardenModel.find();
   }
-}
 
-async function addGarden(gardenInput: GardenInput): Promise<Garden> {
-  try {
-    const validatedData = gardenSchema.parse(gardenInput);
+  async addGarden(gardenInput: GardenInput): Promise<GardenDocument> {
+    const validatedData = GardenDTO.validate(gardenInput);
     const newGarden = new GardenModel(validatedData);
     await newGarden.save();
     return newGarden;
-  } catch (error) {
-    throw error;
   }
-}
 
-async function updateGarden(
-  id: string,
-  gardenData: GardenUpdateInput
-): Promise<Garden | null> {
-  try {
+  async updateGarden(
+    id: string,
+    gardenData: GardenUpdateInput
+  ): Promise<GardenDocument | null> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Invalid garden id");
+      throw new BadRequestError("Invalid garden id");
     }
-    const validatedData = GardenUpdateSchema.parse(gardenData);
+
+    const validatedData = GardenDTO.validateUpdate(gardenData);
     const garden = await GardenModel.findByIdAndUpdate(id, validatedData, { new: true });
 
     if (!garden) {
-      throw new Error("Garden not found");
+      throw new NotFoundError("Garden not found");
     }
 
     return garden;
-  } catch (error) {
-    throw error;
   }
-}
 
-async function deleteGarden(id: string): Promise<boolean> {
-  try {
+  async deleteGarden(id: string): Promise<boolean> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new Error("Invalid garden id");
+      throw new BadRequestError("Invalid garden id");
     }
     const result = await GardenModel.findByIdAndDelete(id);
-    return result !== null;
-  } catch (error) {
-    throw error;
+    if (!result) {
+      throw new NotFoundError("Garden not found");
+    }
+    return true;
   }
 }
 
-export default {
-  getGarden,
-  getGardens,
-  addGarden,
-  updateGarden,
-  deleteGarden,
-};
+export default new GardenRepository();
