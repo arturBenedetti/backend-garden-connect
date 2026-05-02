@@ -5,6 +5,7 @@ export type UserEntityProps = {
   name: string;
   cpf: string;
   email: string;
+  password?: string;
   type?: "user" | "admin";
 };
 
@@ -13,13 +14,15 @@ export class UserEntity {
   name: string;
   cpf: string;
   email: string;
+  password: string | undefined;
   type: "user" | "admin";
 
-  constructor({ _id, name, cpf, email, type = "user" }: UserEntityProps) {
+  constructor({ _id, name, cpf, email, password, type = "user" }: UserEntityProps) {
     this._id = _id ?? new mongoose.Types.ObjectId();
     this.name = name;
     this.cpf = cpf;
     this.email = email;
+    this.password = password;
     this.type = type;
   }
 
@@ -29,6 +32,7 @@ export class UserEntity {
       name: String((doc as any).name),
       cpf: String((doc as any).cpf),
       email: String((doc as any).email),
+      password: (doc as any).password,
       type: (doc as any).type || "user",
     });
   }
