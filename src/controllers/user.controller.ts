@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import userRepository from "../repositories/user.repository";
-import { UserInput } from "../dtos/user.dto";
+import { UserInput, UserLoginInput } from "../dtos/user.dto";
+import jwt from "jsonwebtoken";
+import { InternalServerError } from "../errors/http-error";
 
 class UserController {
   async getUser(req: Request, res: Response, next: NextFunction) {
@@ -48,6 +50,32 @@ class UserController {
       const id = String(req.params.id);
       await userRepository.deleteUser(id);
       res.sendStatus(204);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async login(req: Request, res: Response, next: NextFunction) {
+    try {
+      const loginData = req.body as UserLoginInput;
+      const user = await userRepository.login(loginData);
+
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new InternalServerError("JWT secret is not configured");
+      }
+
+      const token = jwt.sign(
+        {
+          sub: user._id.toString(),
+          email: user.email,
+          type: user.type,
+        },
+        jwtSecret as jwt.Secret,
+        { expiresIn: process.env.JWT_EXPIRES_IN ?? "1d" } as jwt.SignOptions
+      );
+
+      res.status(200).json({ token });
     } catch (error) {
       next(error);
     }

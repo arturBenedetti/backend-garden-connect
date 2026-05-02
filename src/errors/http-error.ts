@@ -26,6 +26,12 @@ export class ConflictError extends HttpError {
   }
 }
 
+export class UnauthorizedError extends HttpError {
+  constructor(message = "Unauthorized") {
+    super(401, message);
+  }
+}
+
 export class InternalServerError extends HttpError {
   constructor(message = "Internal server error") {
     super(500, message);

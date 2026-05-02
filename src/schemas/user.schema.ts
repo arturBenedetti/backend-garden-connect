@@ -20,6 +20,12 @@ const userSchema = new Schema<UserDocument>(
       unique: true,
       lowercase: true,
     },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+      select: false,
+    },
     type: {
       type: String,
       required: true,
@@ -29,6 +35,18 @@ const userSchema = new Schema<UserDocument>(
   },
   {
     versionKey: false,
+    toJSON: {
+      transform: (_doc, ret) => {
+        const { password, ...sanitized } = ret as Record<string, unknown>;
+        return sanitized;
+      },
+    },
+    toObject: {
+      transform: (_doc, ret) => {
+        const { password, ...sanitized } = ret as Record<string, unknown>;
+        return sanitized;
+      },
+    },
   }
 );
 
