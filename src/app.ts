@@ -1,10 +1,10 @@
 import type { Request, Response, NextFunction } from "express";
 import "express-async-errors";
 import express from "express";
-import swaggerUi from "swagger-ui-express";
 import rootRouter from "./routers/router";
 import { getZodErrorMessage, getErrorStatusCode } from "./middlewares/error.handler";
 import { openApiSpec } from "./docs/openapi";
+import { serveSwaggerUi } from "./docs/swagger-ui.route";
 
 const app = express();
 
@@ -14,13 +14,8 @@ app.get("/openapi.json", (_req: Request, res: Response) => {
   res.json(openApiSpec);
 });
 
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(openApiSpec, {
-    customSiteTitle: "Garden Connect API",
-  })
-);
+/** CDN-based UI: swagger-ui-express static files are unreliable on Vercel serverless. */
+app.get(["/api-docs", "/api-docs/"], serveSwaggerUi("/openapi.json"));
 
 app.use(rootRouter);
 
