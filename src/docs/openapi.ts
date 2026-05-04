@@ -8,12 +8,13 @@ export const openApiSpec = {
     title: "Garden Connect API",
     version: "1.0.0",
     description:
-      "API REST do backend Garden Connect (utilizadores e jardins).",
+      "API REST do backend Garden Connect (utilizadores, jardins e equipamentos).",
   },
   tags: [
     { name: "Health", description: "Estado do serviço" },
     { name: "Users", description: "Utilizadores" },
     { name: "Gardens", description: "Jardins" },
+    { name: "Equipamentos", description: "Equipamento por jardim (horta)" },
   ],
   paths: {
     "/health": {
@@ -265,6 +266,121 @@ export const openApiSpec = {
         },
       },
     },
+    "/equipamentos": {
+      get: {
+        tags: ["Equipamentos"],
+        summary: "Listar equipamentos",
+        parameters: [
+          {
+            name: "gardenId",
+            in: "query",
+            required: false,
+            description:
+              "Filtrar por jardim (ObjectId MongoDB da horta / garden)",
+            schema: { type: "string", example: "507f1f77bcf86cd799439011" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Lista de equipamentos",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Equipment" },
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+      post: {
+        tags: ["Equipamentos"],
+        summary: "Criar equipamento",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/EquipmentInput" },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Equipamento criado",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Equipment" },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+    },
+    "/equipamentos/{id}": {
+      get: {
+        tags: ["Equipamentos"],
+        summary: "Obter equipamento por ID",
+        parameters: [{ $ref: "#/components/parameters/EquipmentIdPath" }],
+        responses: {
+          "200": {
+            description: "Equipamento (null se não existir)",
+            content: {
+              "application/json": {
+                schema: {
+                  nullable: true,
+                  allOf: [{ $ref: "#/components/schemas/Equipment" }],
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+      patch: {
+        tags: ["Equipamentos"],
+        summary: "Atualizar equipamento",
+        parameters: [{ $ref: "#/components/parameters/EquipmentIdPath" }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/EquipmentUpdateInput" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Equipamento atualizado",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Equipment" },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+      delete: {
+        tags: ["Equipamentos"],
+        summary: "Eliminar equipamento",
+        parameters: [{ $ref: "#/components/parameters/EquipmentIdPath" }],
+        responses: {
+          "204": { description: "Eliminado com sucesso" },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+    },
   },
   components: {
     parameters: {
@@ -280,6 +396,13 @@ export const openApiSpec = {
         in: "path",
         required: true,
         description: "ObjectId MongoDB do jardim",
+        schema: { type: "string", example: "507f1f77bcf86cd799439011" },
+      },
+      EquipmentIdPath: {
+        name: "id",
+        in: "path",
+        required: true,
+        description: "ObjectId MongoDB do equipamento",
         schema: { type: "string", example: "507f1f77bcf86cd799439011" },
       },
     },
@@ -402,6 +525,42 @@ export const openApiSpec = {
         properties: {
           name: { type: "string", minLength: 1, maxLength: 100 },
           localization: { type: "string", minLength: 1, maxLength: 100 },
+        },
+      },
+      Equipment: {
+        type: "object",
+        properties: {
+          _id: { type: "string" },
+          name: { type: "string", maxLength: 200 },
+          state: { type: "string", maxLength: 100 },
+          gardenId: {
+            type: "string",
+            description: "ObjectId do jardim (horta)",
+          },
+        },
+      },
+      EquipmentInput: {
+        type: "object",
+        required: ["name", "state", "gardenId"],
+        properties: {
+          name: { type: "string", minLength: 1, maxLength: 200 },
+          state: { type: "string", minLength: 1, maxLength: 100 },
+          gardenId: {
+            type: "string",
+            description: "ObjectId MongoDB do jardim existente",
+            example: "507f1f77bcf86cd799439011",
+          },
+        },
+      },
+      EquipmentUpdateInput: {
+        type: "object",
+        properties: {
+          name: { type: "string", minLength: 1, maxLength: 200 },
+          state: { type: "string", minLength: 1, maxLength: 100 },
+          gardenId: {
+            type: "string",
+            description: "ObjectId MongoDB do jardim existente",
+          },
         },
       },
     },
