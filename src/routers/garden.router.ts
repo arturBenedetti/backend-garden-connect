@@ -3,6 +3,8 @@ import gardenController from "../controllers/garden.controller";
 
 const router = express.Router();
 
+router.get("/:id/canteiros", gardenController.getGardenCanteiros);
+router.get("/:id/equipments", gardenController.getGardenEquipments);
 router.get("/:id", gardenController.getGarden);
 router.get("/", gardenController.getGardens);
 router.post("/", gardenController.postGarden);

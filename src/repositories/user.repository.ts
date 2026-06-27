@@ -9,6 +9,7 @@ import {
 import mongoose from "mongoose";
 import { BadRequestError, NotFoundError, UnauthorizedError } from "../errors/http-error";
 import bcrypt from "bcryptjs";
+import tarefaRepository from "./tarefa.repository";
 
 class UserRepository {
   async getUser(id: string): Promise<UserDocument | null> {
@@ -56,10 +57,14 @@ class UserRepository {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestError("Invalid user id");
     }
-    const result = await UserModel.findByIdAndDelete(id);
-    if (!result) {
+
+    const user = await UserModel.findById(id);
+    if (!user) {
       throw new NotFoundError("User not found");
     }
+
+    await tarefaRepository.deleteByUserId(id);
+    await UserModel.findByIdAndDelete(id);
     return true;
   }
 

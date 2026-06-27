@@ -7,13 +7,36 @@ import {
 } from "../dtos/garden.dto";
 import mongoose from "mongoose";
 import { BadRequestError, NotFoundError } from "../errors/http-error";
+import equipmentRepository from "./equipment.repository";
+import canteiroRepository from "./canteiro.repository";
+
+type GetGardenOptions = {
+  includeEquipments?: boolean;
+  includeCanteiros?: boolean;
+};
 
 class GardenRepository {
-  async getGarden(id: string): Promise<GardenDocument | null> {
+  private assertValidObjectId(id: string) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new BadRequestError("Invalid garden id");
     }
-    return GardenModel.findById(id);
+  }
+
+  async getGarden(
+    id: string,
+    options?: GetGardenOptions
+  ): Promise<GardenDocument | null> {
+    this.assertValidObjectId(id);
+
+    const query = GardenModel.findById(id);
+    if (options?.includeEquipments) {
+      query.populate("equipments");
+    }
+    if (options?.includeCanteiros) {
+      query.populate("canteiros");
+    }
+
+    return query;
   }
 
   async getGardens(): Promise<GardenDocument[]> {
@@ -31,9 +54,7 @@ class GardenRepository {
     id: string,
     gardenData: GardenUpdateInput
   ): Promise<GardenDocument | null> {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid garden id");
-    }
+    this.assertValidObjectId(id);
 
     const validatedData = GardenDTO.validateUpdate(gardenData);
     const garden = await GardenModel.findByIdAndUpdate(id, validatedData, { new: true });
@@ -46,13 +67,16 @@ class GardenRepository {
   }
 
   async deleteGarden(id: string): Promise<boolean> {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestError("Invalid garden id");
-    }
-    const result = await GardenModel.findByIdAndDelete(id);
-    if (!result) {
+    this.assertValidObjectId(id);
+
+    const garden = await GardenModel.findById(id);
+    if (!garden) {
       throw new NotFoundError("Garden not found");
     }
+
+    await equipmentRepository.deleteByGardenId(id);
+    await canteiroRepository.deleteByGardenId(id);
+    await GardenModel.findByIdAndDelete(id);
     return true;
   }
 }

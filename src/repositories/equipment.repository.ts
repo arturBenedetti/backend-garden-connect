@@ -32,6 +32,7 @@ class EquipmentRepository {
   async getEquipments(gardenId?: string): Promise<EquipmentDocument[]> {
     if (gardenId !== undefined && gardenId !== "") {
       this.assertValidObjectId(gardenId, "garden id");
+      await this.assertGardenExists(gardenId);
       return EquipmentModel.find({ gardenId });
     }
     return EquipmentModel.find();
@@ -74,6 +75,11 @@ class EquipmentRepository {
       throw new NotFoundError("Equipment not found");
     }
     return true;
+  }
+
+  async deleteByGardenId(gardenId: string): Promise<void> {
+    this.assertValidObjectId(gardenId, "garden id");
+    await EquipmentModel.deleteMany({ gardenId });
   }
 }
 

@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import userRepository from "../repositories/user.repository";
-import { UserInput, UserLoginInput } from "../dtos/user.dto";
-import jwt from "jsonwebtoken";
-import { InternalServerError } from "../errors/http-error";
+import tarefaRepository from "../repositories/tarefa.repository";
+import { NotFoundError, InternalServerError } from "../errors/http-error";
 
 class UserController {
   async getUser(req: Request, res: Response, next: NextFunction) {
@@ -10,6 +9,21 @@ class UserController {
       const id = String(req.params.id);
       const user = await userRepository.getUser(id);
       res.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getUserTarefas(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = String(req.params.id);
+      const user = await userRepository.getUser(id);
+      if (!user) {
+        throw new NotFoundError("User not found");
+      }
+
+      const tarefas = await tarefaRepository.getTarefas({ userId: id });
+      res.status(200).json(tarefas);
     } catch (error) {
       next(error);
     }
