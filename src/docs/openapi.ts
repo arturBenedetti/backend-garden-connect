@@ -8,7 +8,7 @@ export const openApiSpec = {
     title: "Garden Connect API",
     version: "1.0.0",
     description:
-      "API REST do backend Garden Connect (utilizadores, jardins, equipamentos, insumos, canteiros, espécies de planta e plantios).",
+      "API REST do backend Garden Connect (utilizadores, jardins, equipamentos, insumos, canteiros, espécies de planta, plantios, tarefas e agendas).",
   },
   tags: [
     { name: "Health", description: "Estado do serviço" },
@@ -19,6 +19,8 @@ export const openApiSpec = {
     { name: "Canteiros", description: "Canteiros por jardim (horta)" },
     { name: "Espécies de planta", description: "Catálogo de espécies de planta" },
     { name: "Plantios", description: "Plantios por canteiro e espécie" },
+    { name: "Tarefas", description: "Tarefas atribuídas a utilizadores e canteiros" },
+    { name: "Agendas", description: "Agendamentos de tarefas por data e hora" },
   ],
   paths: {
     "/health": {
@@ -158,9 +160,36 @@ export const openApiSpec = {
       delete: {
         tags: ["Users"],
         summary: "Eliminar utilizador",
+        description:
+          "Elimina o utilizador e todas as tarefas associadas (cascade delete).",
         parameters: [{ $ref: "#/components/parameters/IdPath" }],
         responses: {
           "204": { description: "Eliminado com sucesso" },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+    },
+    "/users/{id}/tarefas": {
+      get: {
+        tags: ["Users"],
+        summary: "Listar tarefas de um utilizador",
+        description:
+          "Retorna as tarefas atribuídas ao utilizador. Um utilizador pode ter zero ou mais tarefas.",
+        parameters: [{ $ref: "#/components/parameters/IdPath" }],
+        responses: {
+          "200": {
+            description: "Lista de tarefas do utilizador (pode ser vazia)",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Tarefa" },
+                },
+              },
+            },
+          },
           "400": { $ref: "#/components/responses/BadRequest" },
           "404": { $ref: "#/components/responses/NotFound" },
           "500": { $ref: "#/components/responses/InternalError" },
@@ -280,7 +309,7 @@ export const openApiSpec = {
         tags: ["Gardens"],
         summary: "Eliminar jardim",
         description:
-          "Elimina o jardim e todos os equipamentos, plantios e canteiros associados (cascade delete).",
+          "Elimina o jardim e todos os equipamentos, plantios, tarefas e canteiros associados (cascade delete).",
         parameters: [{ $ref: "#/components/parameters/GardenIdPath" }],
         responses: {
           "204": { description: "Eliminado com sucesso" },
@@ -619,7 +648,7 @@ export const openApiSpec = {
         tags: ["Canteiros"],
         summary: "Eliminar canteiro",
         description:
-          "Elimina o canteiro e todos os plantios associados (cascade delete).",
+          "Elimina o canteiro e todos os plantios e tarefas associados (cascade delete).",
         parameters: [{ $ref: "#/components/parameters/CanteiroIdPath" }],
         responses: {
           "204": { description: "Eliminado com sucesso" },
@@ -644,6 +673,31 @@ export const openApiSpec = {
                 schema: {
                   type: "array",
                   items: { $ref: "#/components/schemas/Plantio" },
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+    },
+    "/canteiros/{id}/tarefas": {
+      get: {
+        tags: ["Canteiros"],
+        summary: "Listar tarefas de um canteiro",
+        description:
+          "Retorna as tarefas do canteiro. Um canteiro pode ter zero ou mais tarefas.",
+        parameters: [{ $ref: "#/components/parameters/CanteiroIdPath" }],
+        responses: {
+          "200": {
+            description: "Lista de tarefas do canteiro (pode ser vazia)",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Tarefa" },
                 },
               },
             },
@@ -989,6 +1043,295 @@ export const openApiSpec = {
         },
       },
     },
+    "/tarefas": {
+      get: {
+        tags: ["Tarefas"],
+        summary: "Listar tarefas",
+        parameters: [
+          {
+            name: "userId",
+            in: "query",
+            required: false,
+            description: "Filtrar por utilizador (ObjectId MongoDB)",
+            schema: { type: "string", example: "507f1f77bcf86cd799439011" },
+          },
+          {
+            name: "canteiroId",
+            in: "query",
+            required: false,
+            description: "Filtrar por canteiro (ObjectId MongoDB)",
+            schema: { type: "string", example: "507f1f77bcf86cd799439011" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Lista de tarefas",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Tarefa" },
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+      post: {
+        tags: ["Tarefas"],
+        summary: "Criar tarefa",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/TarefaInput" },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Tarefa criada",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Tarefa" },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+    },
+    "/tarefas/{id}": {
+      get: {
+        tags: ["Tarefas"],
+        summary: "Obter tarefa por ID",
+        parameters: [
+          { $ref: "#/components/parameters/TarefaIdPath" },
+          {
+            name: "includeUser",
+            in: "query",
+            required: false,
+            description: "Incluir dados do utilizador associado (sem password)",
+            schema: { type: "boolean", default: false },
+          },
+          {
+            name: "includeCanteiro",
+            in: "query",
+            required: false,
+            description: "Incluir dados do canteiro associado",
+            schema: { type: "boolean", default: false },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Tarefa (null se não existir)",
+            content: {
+              "application/json": {
+                schema: {
+                  nullable: true,
+                  allOf: [{ $ref: "#/components/schemas/Tarefa" }],
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+      patch: {
+        tags: ["Tarefas"],
+        summary: "Atualizar tarefa",
+        parameters: [{ $ref: "#/components/parameters/TarefaIdPath" }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/TarefaUpdateInput" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Tarefa atualizada",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Tarefa" },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+      delete: {
+        tags: ["Tarefas"],
+        summary: "Eliminar tarefa",
+        description:
+          "Elimina a tarefa e todos os agendamentos associados (cascade delete).",
+        parameters: [{ $ref: "#/components/parameters/TarefaIdPath" }],
+        responses: {
+          "204": { description: "Eliminado com sucesso" },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+    },
+    "/tarefas/{id}/agendas": {
+      get: {
+        tags: ["Tarefas"],
+        summary: "Listar agendamentos de uma tarefa",
+        description:
+          "Retorna os agendamentos da tarefa ordenados por data/hora. Uma tarefa pode ter zero ou mais entradas na agenda.",
+        parameters: [{ $ref: "#/components/parameters/TarefaIdPath" }],
+        responses: {
+          "200": {
+            description: "Lista de agendamentos da tarefa (pode ser vazia)",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Agenda" },
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+    },
+    "/agendas": {
+      get: {
+        tags: ["Agendas"],
+        summary: "Listar agendamentos",
+        parameters: [
+          {
+            name: "tarefaId",
+            in: "query",
+            required: false,
+            description: "Filtrar por tarefa (ObjectId MongoDB)",
+            schema: { type: "string", example: "507f1f77bcf86cd799439011" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Lista de agendamentos ordenados por data/hora",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Agenda" },
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+      post: {
+        tags: ["Agendas"],
+        summary: "Criar agendamento",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AgendaInput" },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Agendamento criado",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Agenda" },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+    },
+    "/agendas/{id}": {
+      get: {
+        tags: ["Agendas"],
+        summary: "Obter agendamento por ID",
+        parameters: [
+          { $ref: "#/components/parameters/AgendaIdPath" },
+          {
+            name: "includeTarefa",
+            in: "query",
+            required: false,
+            description: "Incluir dados da tarefa associada",
+            schema: { type: "boolean", default: false },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "Agendamento (null se não existir)",
+            content: {
+              "application/json": {
+                schema: {
+                  nullable: true,
+                  allOf: [{ $ref: "#/components/schemas/Agenda" }],
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+      patch: {
+        tags: ["Agendas"],
+        summary: "Atualizar agendamento",
+        parameters: [{ $ref: "#/components/parameters/AgendaIdPath" }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AgendaUpdateInput" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Agendamento atualizado",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/Agenda" },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+      delete: {
+        tags: ["Agendas"],
+        summary: "Eliminar agendamento",
+        parameters: [{ $ref: "#/components/parameters/AgendaIdPath" }],
+        responses: {
+          "204": { description: "Eliminado com sucesso" },
+          "400": { $ref: "#/components/responses/BadRequest" },
+          "404": { $ref: "#/components/responses/NotFound" },
+          "500": { $ref: "#/components/responses/InternalError" },
+        },
+      },
+    },
   },
   components: {
     parameters: {
@@ -1039,6 +1382,20 @@ export const openApiSpec = {
         in: "path",
         required: true,
         description: "ObjectId MongoDB do plantio",
+        schema: { type: "string", example: "507f1f77bcf86cd799439011" },
+      },
+      TarefaIdPath: {
+        name: "id",
+        in: "path",
+        required: true,
+        description: "ObjectId MongoDB da tarefa",
+        schema: { type: "string", example: "507f1f77bcf86cd799439011" },
+      },
+      AgendaIdPath: {
+        name: "id",
+        in: "path",
+        required: true,
+        description: "ObjectId MongoDB do agendamento",
         schema: { type: "string", example: "507f1f77bcf86cd799439011" },
       },
     },
@@ -1382,6 +1739,119 @@ export const openApiSpec = {
             type: "string",
             enum: ["ativo", "colhido", "cancelado"],
           },
+        },
+      },
+      Tarefa: {
+        type: "object",
+        properties: {
+          _id: { type: "string" },
+          descricao: { type: "string", maxLength: 500 },
+          prioridade: {
+            type: "string",
+            enum: ["baixa", "media", "alta"],
+          },
+          status: {
+            type: "string",
+            enum: ["pendente", "em_andamento", "concluida", "cancelada"],
+          },
+          userId: {
+            type: "string",
+            description: "ObjectId do utilizador responsável",
+          },
+          canteiroId: {
+            type: "string",
+            description: "ObjectId do canteiro associado",
+          },
+        },
+      },
+      TarefaInput: {
+        type: "object",
+        required: [
+          "descricao",
+          "prioridade",
+          "status",
+          "userId",
+          "canteiroId",
+        ],
+        properties: {
+          descricao: { type: "string", minLength: 1, maxLength: 500 },
+          prioridade: {
+            type: "string",
+            enum: ["baixa", "media", "alta"],
+          },
+          status: {
+            type: "string",
+            enum: ["pendente", "em_andamento", "concluida", "cancelada"],
+          },
+          userId: {
+            type: "string",
+            description: "ObjectId MongoDB do utilizador existente",
+            example: "507f1f77bcf86cd799439011",
+          },
+          canteiroId: {
+            type: "string",
+            description: "ObjectId MongoDB do canteiro existente",
+            example: "507f1f77bcf86cd799439011",
+          },
+        },
+      },
+      TarefaUpdateInput: {
+        type: "object",
+        properties: {
+          descricao: { type: "string", minLength: 1, maxLength: 500 },
+          prioridade: {
+            type: "string",
+            enum: ["baixa", "media", "alta"],
+          },
+          status: {
+            type: "string",
+            enum: ["pendente", "em_andamento", "concluida", "cancelada"],
+          },
+          userId: {
+            type: "string",
+            description: "ObjectId MongoDB do utilizador existente",
+          },
+          canteiroId: {
+            type: "string",
+            description: "ObjectId MongoDB do canteiro existente",
+          },
+        },
+      },
+      Agenda: {
+        type: "object",
+        properties: {
+          _id: { type: "string" },
+          tarefaId: {
+            type: "string",
+            description: "ObjectId da tarefa associada",
+          },
+          data_hora: { type: "string", format: "date-time" },
+        },
+      },
+      AgendaInput: {
+        type: "object",
+        required: ["tarefaId", "data_hora"],
+        properties: {
+          tarefaId: {
+            type: "string",
+            description: "ObjectId MongoDB da tarefa existente",
+            example: "507f1f77bcf86cd799439011",
+          },
+          data_hora: {
+            type: "string",
+            format: "date-time",
+            example: "2026-06-27T14:30:00.000Z",
+          },
+        },
+      },
+      AgendaUpdateInput: {
+        type: "object",
+        properties: {
+          tarefaId: {
+            type: "string",
+            description: "ObjectId MongoDB da tarefa existente",
+          },
+          data_hora: { type: "string", format: "date-time" },
         },
       },
     },

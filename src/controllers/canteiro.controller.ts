@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import canteiroRepository from "../repositories/canteiro.repository";
 import plantioRepository from "../repositories/plantio.repository";
+import tarefaRepository from "../repositories/tarefa.repository";
 import { CanteiroInput } from "../dtos/canteiro.dto";
 import { NotFoundError } from "../errors/http-error";
 
@@ -25,6 +26,21 @@ class CanteiroController {
 
       const plantios = await plantioRepository.getPlantios({ canteiroId: id });
       res.status(200).json(plantios);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getCanteiroTarefas(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = String(req.params.id);
+      const canteiro = await canteiroRepository.getCanteiro(id);
+      if (!canteiro) {
+        throw new NotFoundError("Canteiro not found");
+      }
+
+      const tarefas = await tarefaRepository.getTarefas({ canteiroId: id });
+      res.status(200).json(tarefas);
     } catch (error) {
       next(error);
     }

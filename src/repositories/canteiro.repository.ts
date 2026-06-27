@@ -9,6 +9,7 @@ import {
 import mongoose from "mongoose";
 import { BadRequestError, NotFoundError } from "../errors/http-error";
 import plantioRepository from "./plantio.repository";
+import tarefaRepository from "./tarefa.repository";
 
 class CanteiroRepository {
   private assertValidObjectId(id: string, label: string) {
@@ -77,6 +78,7 @@ class CanteiroRepository {
     }
 
     await plantioRepository.deleteByCanteiroId(id);
+    await tarefaRepository.deleteByCanteiroId(id);
     await CanteiroModel.findByIdAndDelete(id);
     return true;
   }
@@ -84,6 +86,7 @@ class CanteiroRepository {
   async deleteByGardenId(gardenId: string): Promise<void> {
     this.assertValidObjectId(gardenId, "garden id");
     await plantioRepository.deleteByGardenId(gardenId);
+    await tarefaRepository.deleteByGardenId(gardenId);
     await CanteiroModel.deleteMany({ gardenId });
   }
 }
