@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 import userRepository from "../repositories/user.repository";
 import tarefaRepository from "../repositories/tarefa.repository";
 import { NotFoundError, InternalServerError } from "../errors/http-error";
+import { UserInput, UserLoginInput } from "../dtos/user.dto";
 
 class UserController {
   async getUser(req: Request, res: Response, next: NextFunction) {

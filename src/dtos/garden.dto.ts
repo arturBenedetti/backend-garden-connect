@@ -7,6 +7,8 @@ export class GardenDTO {
       .string()
       .min(1, "Localization is mandatory")
       .max(100, "Name is too long"),
+    latitude: z.number().min(-90).max(90).optional(),
+    longitude: z.number().min(-180).max(180).optional(),
   });
 
   static updateSchema = GardenDTO.schema.partial();
