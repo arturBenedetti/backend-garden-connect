@@ -12,6 +12,14 @@ const gardenSchema = new Schema<GardenDocument>(
       type: String,
       required: true,
     },
+    latitude: {
+      type: Number,
+      required: false,
+    },
+    longitude: {
+      type: Number,
+      required: false,
+    },
   },
   {
     versionKey: false,
