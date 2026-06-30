@@ -1503,6 +1503,18 @@ export const openApiSpec = {
           _id: { type: "string" },
           name: { type: "string", maxLength: 100 },
           localization: { type: "string" },
+          latitude: {
+            type: "number",
+            format: "float",
+            minimum: -90,
+            maximum: 90,
+          },
+          longitude: {
+            type: "number",
+            format: "float",
+            minimum: -180,
+            maximum: 180,
+          },
         },
       },
       GardenWithEquipments: {
@@ -1533,6 +1545,18 @@ export const openApiSpec = {
         properties: {
           name: { type: "string", minLength: 1, maxLength: 100 },
           localization: { type: "string", minLength: 1, maxLength: 100 },
+          latitude: {
+            type: "number",
+            format: "float",
+            minimum: -90,
+            maximum: 90,
+          },
+          longitude: {
+            type: "number",
+            format: "float",
+            minimum: -180,
+            maximum: 180,
+          },
         },
       },
       GardenUpdateInput: {
@@ -1540,6 +1564,18 @@ export const openApiSpec = {
         properties: {
           name: { type: "string", minLength: 1, maxLength: 100 },
           localization: { type: "string", minLength: 1, maxLength: 100 },
+          latitude: {
+            type: "number",
+            format: "float",
+            minimum: -90,
+            maximum: 90,
+          },
+          longitude: {
+            type: "number",
+            format: "float",
+            minimum: -180,
+            maximum: 180,
+          },
         },
       },
       Equipment: {
